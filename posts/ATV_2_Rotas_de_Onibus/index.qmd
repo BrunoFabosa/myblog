@@ -1,0 +1,101 @@
+---
+title: "Consulta de frota de Ônibus"
+author: "Bruno Fabosa"
+date: "2025-11-23"
+image: "rota-de-ônibus-escolar-conceitual-no-mapa-renderização-d-208048181.jpg"
+categories: [Consulta, Ônibus, Rotas]
+---
+
+Neste post irei mostrar uma funcão em *python* que liste as rotas de um ônibus **X** do estado de **SP**
+
+![](thumbnail.jpg)
+
+```{python}
+import requests
+import folium
+import pandas as pd
+
+TOKEN = "086d96031c4225a50984efcc8ba4aa16fddefde1a7997f5aea145c77b1f7599e"
+# Linha Exemplo: 875A-10 (Aeroporto) ou 809U-10 (Cidade Universitária)
+LINHA_DESEJADA = "875A-10" 
+
+session = requests.Session()
+
+def monitorar_completo():
+    # 1. Autenticação
+    url_auth = f"http://api.olhovivo.sptrans.com.br/v2.1/Login/Autenticar?token={TOKEN}"
+    if session.post(url_auth).text != "true":
+        print("Erro no Login")
+        return None
+
+    # 2. Buscar Código Interno da Linha
+    url_linha = f"http://api.olhovivo.sptrans.com.br/v2.1/Linha/Buscar?termosBusca={LINHA_DESEJADA}"
+    linhas = session.get(url_linha).json()
+    
+    if not linhas:
+        print("Linha não encontrada.")
+        return None
+        
+    linha_info = linhas[0]
+    codigo_linha = linha_info['cl']
+    print(f"Monitorando: {linha_info['lt']}-{linha_info['tl']} (Cód: {codigo_linha})")
+
+    # 3. Buscar Posições 
+    url_pos = f"http://api.olhovivo.sptrans.com.br/v2.1/Posicao/Linha?codigoLinha={codigo_linha}"
+    dados_pos = session.get(url_pos).json()
+    onibus_lista = dados_pos['vs'] if 'vs' in dados_pos else []
+
+    # 4. Buscar Paradas 
+    url_paradas = f"http://api.olhovivo.sptrans.com.br/v2.1/Parada/BuscarParadasPorLinha?codigoLinha={codigo_linha}"
+    paradas_lista = session.get(url_paradas).json()
+
+    # 5. Buscar Trajeto (O desenho da linha na rua)
+    # A API não tem um endpoint "Poligono" direto simples documentado publicamente que funcione sempre,
+    # Tentei desenhar ligando as paradas ou usar as coordenadas dos ônibus para centrar.
+    # OBS: A SPTrans tem endpoint de trajeto, mas às vezes falha. 
+
+    # Centraliza no primeiro ônibus ou na primeira parada encontrada
+    if onibus_lista:
+        centro = [onibus_lista[0]['py'], onibus_lista[0]['px']]
+    elif paradas_lista:
+        centro = [paradas_lista[0]['py'], paradas_lista[0]['px']]
+    else:
+        print("Sem dados de localização.")
+        return None
+
+    mapa = folium.Map(location=centro, zoom_start=14)
+
+    # A) Desenhar as Paradas (Pins Azuis)
+    print(f"Desenhando {len(paradas_lista)} paradas...")
+    for parada in paradas_lista:
+        folium.Marker(
+            [parada['py'], parada['px']],
+            popup=f"Parada: {parada['np']}",
+            icon=folium.Icon(color='blue', icon='info-sign')
+        ).add_to(mapa)
+
+    # B) Desenhar os Ônibus ao Vivo (Ícones Vermelhos)
+    print(f"Desenhando {len(onibus_lista)} ônibus...")
+    for bus in onibus_lista:
+        folium.Marker(
+            [bus['py'], bus['px']],
+            tooltip=f"Prefixo: {bus['p']}",
+            icon=folium.Icon(color='red', icon='bus', prefix='fa')
+        ).add_to(mapa)
+
+    return mapa
+
+# Gerar e exibir
+mapa_final = monitorar_completo()
+mapa_final 
+                                                                                                                            
+
+```
+
+O mapa interativo acima apresenta o estado da linha 875A-10 (Aeroporto) no momento exato da execução do script. Foram utilizados dados da API Olho Vivo da SPTrans processados com a biblioteca folium.
+
+🔵 Marcadores Azuis (Info): Representam a infraestrutura estática, ou seja, os pontos de parada oficiais cadastrados para este itinerário.
+
+🔴 Marcadores Vermelhos (Ônibus): Representam os veículos ativos operando na linha. A posição é obtida via coordenadas GPS em tempo real.
+
+Ao comparar a posição dos ícones vermelhos com os azuis, é possível visualizar visualmente se os veículos estão próximos de paradas ou em trânsito entre elas.

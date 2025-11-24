@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://your-website-url.example.com/index.html</loc>
+    <lastmod>2025-11-23T23:13:46.063Z</lastmod>
+  </url>
+  <url>
+    <loc>https://your-website-url.example.com/posts/post-with-code/index.html</loc>
+    <lastmod>2025-11-24T00:42:45.460Z</lastmod>
+  </url>
+  <url>
+    <loc>https://your-website-url.example.com/about.html</loc>
+    <lastmod>2025-11-23T23:13:04.748Z</lastmod>
+  </url>
+  <url>
+    <loc>https://your-website-url.example.com/posts/welcome/index.html</loc>
+    <lastmod>2025-11-24T01:23:32.749Z</lastmod>
+  </url>
+  <url>
+    <loc>https://your-website-url.example.com/posts/ATV_1_Dollar/index.html</loc>
+    <lastmod>2025-11-24T02:30:28.104Z</lastmod>
+  </url>
+  <url>
+    <loc>https://your-website-url.example.com/posts/ATV_2_Rotas_de_Onibus/index.html</loc>
+    <lastmod>2025-11-24T01:28:59.628Z</lastmod>
+  </url>
+  <url>
+    <loc>https://your-website-url.example.com/posts/ATV_3_Regressao_Linear/index.html</loc>
+    <lastmod>2025-11-24T02:20:05.108Z</lastmod>
+  </url>
+</urlset>

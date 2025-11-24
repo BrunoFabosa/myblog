@@ -1,0 +1,12 @@
+{
+  "hash": "77bbb93f545c3f067a0ac4d3ceec21e0",
+  "result": {
+    "engine": "jupyter",
+    "markdown": "---\ntitle: \"Regressão Linear\"\nauthor: \"Bruno Fabosa\"\ndate: \"2025-11-23\"\nimage: \"grafico-de-uma-funcao-em-uma-lousa.jpg\"\ncategories: [Calcular, Gráfico, Matemática]\n---\n\nNesta atividade vou demonstrar uma função em *python* que calcula uma regressão linear com dados de estudo entre anos de estudo (X) e salário (y)\n\n::: {#c1ffe61b .cell execution_count=1}\n``` {.python .cell-code}\nimport numpy as np\nimport pandas as pd\nfrom plotnine import ggplot, aes, geom_point, geom_abline, ggsave, theme_gray, labs\n\n# PASSO 1: Dados \nX = np.array([2.8107, 3.5, 4.2, 5.1, 6.0, 7.2, 8.5, 9.1, 10.0, 11.2])\ny = np.array([13102.62, 14500.0, 15200.5, 16800.0, 18000.2, 21000.5, 23500.0, 25100.0, 28000.0, 31000.0])\n\n# PASSO 2: Cálculo Matricial \nX_matriz = np.c_[np.ones(len(X)), X]\nbeta = np.linalg.inv(X_matriz.T @ X_matriz) @ X_matriz.T @ y\na = beta[0] # Intercepto\nb = beta[1] # Inclinação\n\nprint(f\"Cálculo Matricial: a={a:.2f}, b={b:.2f}\")\n\n# PASSO 3: Gerar Gráfico no Estilo da Imagem\ndf = pd.DataFrame({\"x\": X, \"y\": y})\n\nplot = (\n  # Usar \"x\" e \"y\" minúsculos nos eixos para igualar a imagem\n  ggplot(df, aes(x=\"x\", y=\"y\"))\n  \n  # Pontos pretos \n  + geom_point(size=2) \n  # A RETA CALCULADA \n  # Cor preta e um pouco mais grossa\n  + geom_abline(intercept=a, slope=b, size=1.5) \n  + theme_gray()\n  \n  # Define os rótulos simples \"x\" e \"y\"\n  + labs(x=\"x\", y=\"y\")\n)\n\narquivo_saida = \"grafico_final_estilo_imagem.png\"\nplot.save(arquivo_saida, width=8, height=6, dpi=100)\n\nprint(\"-\" * 40)\nprint(f\"SUCESSO! Gráfico salvo como '{arquivo_saida}'\")\nprint(\"-\" * 40)\n```\n\n::: {.cell-output .cell-output-stdout}\n```\nCálculo Matricial: a=6425.26, b=2099.54\n----------------------------------------\nSUCESSO! Gráfico salvo como 'grafico_final_estilo_imagem.png'\n----------------------------------------\n```\n:::\n\n::: {.cell-output .cell-output-stderr}\n```\n/home/codespace/.python/current/lib/python3.12/site-packages/plotnine/ggplot.py:623: PlotnineWarning: Saving 8 x 6 in image.\n/home/codespace/.python/current/lib/python3.12/site-packages/plotnine/ggplot.py:624: PlotnineWarning: Filename: grafico_final_estilo_imagem.png\n```\n:::\n:::\n\n\n",
+    "supporting": [
+      "index_files"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}

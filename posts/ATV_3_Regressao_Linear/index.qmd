@@ -1,0 +1,64 @@
+---
+title: "Regressão Linear"
+author: "Bruno Fabosa"
+date: "2025-11-23"
+image: "grafico-de-uma-funcao-em-uma-lousa.jpg"
+categories: [Calcular, Gráfico, Matemática]
+---
+
+Nesta atividade vou demonstrar uma função em *python* que calcula uma regressão linear com dados de estudo entre anos de estudo (X) e salário (y)
+
+
+```{python}
+import numpy as np
+import pandas as pd
+from plotnine import ggplot, aes, geom_point, geom_abline, theme_gray, labs
+
+# PASSO 1: carregar os arquivos X.txt e y.txt 
+try:
+    X = np.loadtxt("X.txt")
+    y = np.loadtxt("y.txt")
+    titulo_grafico = "Regressão Linear (Dados dos Arquivos txt)"
+    print(f"Arquivos carregados com sucesso. {len(X)} pontos.")
+
+except OSError:
+    print("AVISO: 'X.txt' e 'y.txt' não encontrados. Usando dados de exemplo.")
+    X = np.array([2.81, 3.5, 4.2, 5.1, 6.0, 7.2, 8.5, 9.1, 10.0, 11.2])
+    y = np.array([13102, 14500, 15200, 16800, 18000, 21000, 23500, 25100, 28000, 31000])
+    titulo_grafico = "Regressão Linear (DADOS DE EXEMPLO - Arquivos não encontrados)"
+# PASSO 2: O Cálculo Matricial 
+# Adiciona a coluna de 1s para calcular o intercepto (a)
+X_matriz = np.c_[np.ones(len(X)), X]
+
+# A FÓRMULA MÁGICA: Beta = (X'X)^-1 X'y
+beta = np.linalg.inv(X_matriz.T @ X_matriz) @ X_matriz.T @ y
+
+a = beta[0] # Intercepto 
+b = beta[1] # Inclinação 
+
+# PASSO 3: Gerar o Gráfico para aparecer na tela 
+# Crie o DataFrame para o plotnine
+df_regressao = pd.DataFrame({"x_dados": X, "y_dados": y})
+
+grafico_final = (
+    # Configurei os eixos usando os dados
+    ggplot(df_regressao, aes(x="x_dados", y="y_dados"))
+    
+    # 1. Adicionei os pontos 
+    + geom_point(size=2)
+    
+    # 2. Adicionei a reta calculada pela matriz 
+    # Linha preta e um pouco mais grossa
+    + geom_abline(intercept=a, slope=b, size=1.2, color="black")
+    
+    # 3. Defini o tema cinza 
+    + theme_gray()
+    
+    # 4. Títulos e rótulos
+    + labs(title=titulo_grafico, x="Anos de Estudo (x)", y="Salário (y)")
+)
+
+# PASSO FINAL: Exibir o gráfico 
+grafico_final
+
+```

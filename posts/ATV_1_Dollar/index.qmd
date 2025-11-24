@@ -1,0 +1,85 @@
+---
+title: "Cotação do Dólar"
+author: "Bruno Fabosa"
+date: "2025-11-23"
+categories: [Code, Dolar, Cotação]
+image: "c63a03c7d32aa752eff849004c6bb478.jpg"
+jupyter: python3
+---
+
+Neste post irei mostar como desenvolver um código em *python* que irá consultar a cotação do dólar como referência no mes 08 **Agosto** de **2017**.
+
+```{python}
+import pandas as pd
+import plotly.express as px
+import requests
+from datetime import datetime
+import calendar
+
+def gerar_grafico_dolar_aluno(periodo_mmyyyy):
+    # --- PARTE 1: Definição das Datas ---
+    dt_inicial = datetime.strptime(periodo_mmyyyy, "%m%Y")
+    ultimo_dia = calendar.monthrange(dt_inicial.year, dt_inicial.month)[1]
+    dt_final = dt_inicial.replace(day=ultimo_dia)
+
+    data_ini_api = dt_inicial.strftime("%m-%d-%Y")
+    data_fim_api = dt_final.strftime("%m-%d-%Y")
+
+    # --- PARTE 2: Consulta à API ---
+    url = (
+        f"https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/"
+        f"CotacaoDolarPeriodo(dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)?"
+        f"@dataInicial='{data_ini_api}'&@dataFinalCotacao='{data_fim_api}'&$top=100&$format=json"
+    )
+
+    try:
+        response = requests.get(url)
+        data_json = response.json()
+        df = pd.DataFrame(data_json['value'])
+    except Exception as e:
+        print(f"Erro na conexão: {e}")
+        return None
+
+    if df.empty:
+        print("Nenhum dado encontrado! Verifique se a data é final de semana.")
+        return None
+
+    # --- PARTE 3: Limpeza e Tratamento  ---
+    # converti para data e usei .dt.normalize() para remover as horas (13:00 -> 00:00)
+    df['dataHoraCotacao'] = pd.to_datetime(df['dataHoraCotacao']).dt.normalize()
+    
+    df = df[['dataHoraCotacao', 'cotacaoCompra']].set_index('dataHoraCotacao')
+
+    # --- PARTE 4: Preenchimento de lacunas ---
+    range_completo = pd.date_range(start=dt_inicial, end=dt_final, freq='D')
+    
+    # Agora o reindex vai funcionar porque as horas são iguais (00:00)
+    df_completo = df.reindex(range_completo)
+    df_completo['cotacaoCompra'] = df_completo['cotacaoCompra'].ffill()
+    
+    df_completo = df_completo.reset_index().rename(columns={
+        'index': 'Data', 
+        'cotacaoCompra': 'Cotação (R$)'
+    })
+
+    # --- PARTE 5: Gráfico ---
+    fig = px.line(
+        df_completo, 
+        x='Data', 
+        y='Cotação (R$)', 
+        title=f'Evolução do Dólar - {dt_inicial.strftime("%B/%Y")}',
+        markers=True
+    )
+    
+    # Ajusta o eixo Y para não ficar colado nas bordas
+    fig.update_yaxes(autorange=True) 
+    
+    return fig
+
+figura = gerar_grafico_dolar_aluno("082017")
+if figura:
+    figura.show()
+
+```
+
+Um detalhe técnico importante foi a normalização das datas. A API do Banco Central retorna o dado com data e hora (timestamp), enquanto nossa rotina de dias corridos considera apenas a data. Foi necessário utilizar o método .dt.normalize() do Pandas para ignorar o horário, permitindo que o cruzamento de dados funcionasse corretamente e o gráfico fosse gerado.
